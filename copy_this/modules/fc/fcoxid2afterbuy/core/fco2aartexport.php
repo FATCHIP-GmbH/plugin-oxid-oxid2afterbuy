@@ -472,6 +472,28 @@ class fco2aartexport extends fco2abase {
     }
 
     /**
+     * @param string $sArticleId
+     * @return array
+     */
+    protected function _getAttributesForArticle($sArticleId)
+    {
+        $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
+
+        $sAttrViewName = getViewName('oxattribute');
+        $sViewName = getViewName('oxobject2attribute');
+
+        $sSelect = "select {$sAttrViewName}.`oxid`, {$sAttrViewName}.`oxtitle`, o2a.`oxvalue` from {$sViewName} as o2a ";
+        $sSelect .= "left join {$sAttrViewName} on {$sAttrViewName}.oxid = o2a.oxattrid ";
+        $sSelect .= "where o2a.oxobjectid = :oxobjectid and o2a.oxvalue != '' ";
+        $sSelect .= "order by o2a.oxpos, {$sAttrViewName}.oxpos";
+
+        $aAttributes = $oDb->getAll($sSelect, [
+            ':oxobjectid' => $sArticleId
+        ]);
+        return $aAttributes;
+    }
+
+    /**
      * Add attributes of product to afterbuy article
      *
      * @param $oAfterbuyArticle
@@ -480,7 +502,7 @@ class fco2aartexport extends fco2abase {
      */
     protected function _fcAddAttributeValues($oAfterbuyArticle, $oArticle)
     {
-        $aAttributes = $oArticle->getAttributes();
+        $aAttributes = $this->_getAttributesForArticle($oArticle->getId());
         $this->oDefaultLogger->fcWriteLog(
             "DEBUG: Loaded Attributes of article object with ID:".
             $oArticle->getId(),
@@ -493,11 +515,12 @@ class fco2aartexport extends fco2abase {
         );
 
         $iPos = 1;
-        foreach ($aAttributes as $oAttribute) {
-            $oAttribute->load($oAttribute->getId()); // Load full attribute
+        foreach ($aAttributes as $aAttribute) {
+            $oAttribute = oxNew('oxattribute');
+            $oAttribute->load($aAttribute['OXID']); // Load full attribute
 
             $sAttributeName = $oAttribute->oxattribute__oxtitle->value;
-            $sAttributeValue = $oAttribute->oxattribute__oxvalue->value;
+            $sAttributeValue = $aAttribute['OXVALUE'];
             $sAfterbuyFeatureId = $oAttribute->oxattribute__fcafterbuyfeatureid->value;
 
             $oAfterbuyAddAttribute = $this->_fcGetAddAttribute();
