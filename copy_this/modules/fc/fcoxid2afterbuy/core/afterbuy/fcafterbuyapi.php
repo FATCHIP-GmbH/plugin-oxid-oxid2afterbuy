@@ -497,6 +497,7 @@ class fcafterbuyapi {
         $sXmlData = $this->_fcAddBaseProducts($oArt, $sXmlData);
         $sXmlData = $this->_fcAddCatalogs($oArt, $sXmlData);
         $sXmlData = $this->_fcAddAttributes($oArt, $sXmlData);
+        $sXmlData = $this->_fcAddFeatures($oArt, $sXmlData);
         $sXmlData = $this->_fcAddPictures($oArt, $sXmlData);
 
         $sXmlData .= '</Product></Products>';
@@ -618,6 +619,7 @@ class fcafterbuyapi {
             <BuyingPrice>'.str_replace('.',',',$oArt->BuyingPrice).'</BuyingPrice>
             <Weight>'.$oArt->Weight.'</Weight>
             <FreeValue1><![CDATA['.$oArt->FreeValue1.']]></FreeValue1>
+            <FreeValue3><![CDATA['.$oArt->FreeValue3.']]></FreeValue3>
         ';
 
         return $sXmlData;
@@ -699,6 +701,85 @@ class fcafterbuyapi {
             ";
         }
         $sXmlData .= "</AddAttributes>";
+
+        return $sXmlData;
+    }
+
+    /**
+     * @param string $sFeatureId
+     * @param string $sFeatureValue
+     * @return object
+     */
+    protected function _getPseudoAttribute($sFeatureId, $sFeatureValue)
+    {
+        $oAttribute = oxNew('fcafterbuyaddattribute');
+        $oAttribute->FeatureId = $sFeatureId;
+        $oAttribute->AttributValue = $sFeatureValue;
+        return $oAttribute;
+    }
+
+    /**
+     * @param string $sValue
+     * @return string
+     */
+    protected function _getLanguageValue($sValue)
+    {
+        if (stripos($sValue, "Deutsch") !== false) {
+            return "Deutsch";
+        }
+        if (stripos($sValue, "Englisch") !== false) {
+            return "Englisch";
+        }
+        return false;
+    }
+
+    /**
+     * @param object $oAttribute
+     * @return string
+     */
+    protected function _getFeatureValue($oAttribute)
+    {
+        $sValue = $oAttribute->AttributValue;
+        if ($oAttribute->FeatureId == 2983) { // 2983 = "Sprache"
+            $sValue = $this->_getLanguageValue($sValue);
+        }
+        return $sValue;
+    }
+
+    /**
+     * Adds product attributes
+     * #0102749
+     *
+     * @param $oArt
+     * @param $sXmlData
+     * @return string
+     */
+    protected function _fcAddFeatures($oArt, $sXmlData)
+    {
+        $aAttributeList = $oArt->AddAttributes;
+        $aAttributeList[] = $this->_getPseudoAttribute(2990, $oArt->Name); // 2990 = "Film- / Fernseh-Titel"
+        $aAttributeList[] = $this->_getPseudoAttribute(2988, "Deutsche Originalware"); // 2988 = "Version"
+        if (!empty($oArt->EAN)) {
+            $aAttributeList[] = $this->_getPseudoAttribute(2981, $oArt->EAN); // 2981 = "EAN"
+        }
+
+        $sFeatureXml = "";
+        foreach ($aAttributeList as $oAddAttribute) {
+            if (empty($oAddAttribute->FeatureId)) {
+                continue;
+            }
+            $sValue = $this->_getFeatureValue($oAddAttribute);
+            if (!empty($sValue)) {
+                $sFeatureXml .= "<Feature>";
+                $sFeatureXml .= "<ID>".$oAddAttribute->FeatureId."</ID>";
+                $sFeatureXml .= "<Value><![CDATA[".$sValue."]]></Value>";
+                $sFeatureXml .= "</Feature>";
+            }
+        }
+
+        if (!empty($sFeatureXml)) {
+            $sXmlData .= "<Features>".$sFeatureXml."</Features>";
+        }
 
         return $sXmlData;
     }

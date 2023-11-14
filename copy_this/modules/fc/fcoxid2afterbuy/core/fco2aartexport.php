@@ -18,7 +18,8 @@ class fco2aartexport extends fco2abase {
         'BuyingPrice' => 'oxarticles__oxbprice',
         'Weight' => 'oxarticles__oxweight',
         'ShortDescription' => 'oxarticles__oxshortdesc',
-        'FreeValue1'=> 'oxarticles__oxid',
+        'FreeValue1' => 'oxarticles__oxid',
+        'FreeValue3' => 'oxarticles__tc_ebay_title', #0102749
     );
 
     /**
@@ -493,13 +494,17 @@ class fco2aartexport extends fco2abase {
 
         $iPos = 1;
         foreach ($aAttributes as $oAttribute) {
+            $oAttribute->load($oAttribute->getId()); // Load full attribute
+
             $sAttributeName = $oAttribute->oxattribute__oxtitle->value;
             $sAttributeValue = $oAttribute->oxattribute__oxvalue->value;
+            $sAfterbuyFeatureId = $oAttribute->oxattribute__fcafterbuyfeatureid->value;
 
             $oAfterbuyAddAttribute = $this->_fcGetAddAttribute();
             $oAfterbuyAddAttribute->AttributName = $sAttributeName;
             $oAfterbuyAddAttribute->AttributValue = $sAttributeValue;
             $oAfterbuyAddAttribute->AttributPosition = (string) $iPos;
+            $oAfterbuyAddAttribute->FeatureId = $sAfterbuyFeatureId;
             $oAfterbuyArticle->AddAttributes[] = $oAfterbuyAddAttribute;
             $iPos++;
         }
@@ -860,7 +865,7 @@ class fco2aartexport extends fco2abase {
     protected function _fcAddArticleValues($oAfterbuyArticle, $oArticle) {
         $oAfterbuyArticle->Name = $this->_fcGetArticleName($oArticle);
         $oAfterbuyArticle->Description = $oArticle->getLongDesc();
-        $oAfterbuyArticle->SellingPrice = $oArticle->getPrice()->getBruttoPrice();
+        $oAfterbuyArticle->SellingPrice = $this->_fcGetSellingPrice($oArticle); #0102749
         $oAfterbuyArticle->TaxRate = $oArticle->getArticleVat();
         $oAfterbuyArticle->ItemSize = $oArticle->getSize();
         $oAfterbuyArticle->CanonicalUrl = $oArticle->getMainLink();
@@ -869,6 +874,19 @@ class fco2aartexport extends fco2abase {
         $oAfterbuyArticle = $this->_fcAddPictures($oAfterbuyArticle, $oArticle);
 
         return $oAfterbuyArticle;
+    }
+
+    /**
+     * Get selling price
+     *
+     * @param $oArticle
+     * @return double
+     */
+    protected function _fcGetSellingPrice($oArticle)
+    {
+        $oPrice = $oArticle->getPrice();
+        $oPrice->setPrice($oArticle->oxarticles__tc_ebay_price->value);
+        return $oPrice->getBruttoPrice();
     }
 
     /**
@@ -988,6 +1006,7 @@ class fco2aartexport extends fco2abase {
         if (!$blFcAfterbuyExportAll) {
             $sWhereConditions .= " AND oaab.FCAFTERBUYACTIVE='1' ";
         }
+        $sWhereConditions .= " AND oa.TC_EBAY_PRICE > 0 "; #0102749
 
         $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
         $sQuery = "

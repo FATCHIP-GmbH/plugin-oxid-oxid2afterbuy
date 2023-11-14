@@ -64,6 +64,8 @@ class fco2a_events
         ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;    
     ";
 
+    public static $sQueryUpdateOxattributes = "ALTER TABLE `oxattribute` ADD `FCAFTERBUYFEATUREID` INT(11) NULL;";
+
     public static $sQueryInsertCountryAssignments = "
         REPLACE INTO `fcafterbuycountry` (`OXID`, `FCCARPLATE`) VALUES
           ('a7c40f631fc920687.20179984', 'D'),
@@ -320,6 +322,9 @@ class fco2a_events
         if ($sEdition == 'EE') {
             self::executeQuery(self::$sQueryABEnterpriseOxfield2Shop);
         }
+
+        // UPDATE TABLES
+        self::addColumnIfNotExists("oxattribute", "FCAFTERBUYFEATUREID", self::$sQueryUpdateOxattributes);
     }
 
     /**
@@ -496,6 +501,29 @@ class fco2a_events
         }
         return false;
     }
+
+    /**
+     * Add a column to a database table.
+     *
+     * @param  string $sTableName            table name
+     * @param  string $sColumnName           column name
+     * @param  string $sQuery                sql-query to add column to table
+     * @return bool
+     */
+    public static function addColumnIfNotExists($sTableName, $sColumnName, $sQuery)
+    {
+        $aColumns = oxDb::getDb()->getAll("SHOW COLUMNS FROM {$sTableName} LIKE ?", array($sColumnName));
+        if (empty($aColumns)) {
+            try {
+                oxDb::getDb()->Execute($sQuery);
+                return true;
+            } catch (\Exception $e) {
+                // do nothing as of yet
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Replaces data for given table

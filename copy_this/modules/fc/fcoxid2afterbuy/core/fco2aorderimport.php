@@ -25,6 +25,16 @@ class fco2aorderimport extends fco2abase {
     );
 
     /**
+     * @var string
+     */
+    protected $_fcEbayPaymentType = 'ebay_payments';
+
+    /**
+     * @var string
+     */
+    protected $_fcEbayIpIdentifier = 'ebay';
+
+    /**
      * Central entry point for triggering order import
      *
      * @param void
@@ -450,6 +460,9 @@ class fco2aorderimport extends fco2abase {
         $oPaymentInfo = $oAfterbuyOrder->PaymentInfo;
         $sPaymentType = $this->_fcGetPaymentMethod($oPaymentInfo);
         $oOrder->oxorder__oxpaymenttype = new oxField($sPaymentType);
+        if ($sPaymentType == $this->_fcEbayPaymentType) {
+            $oOrder->oxorder__oxip = new oxField($this->_fcEbayIpIdentifier); #0102749
+        }
         $oOrder->oxorder__oxtransid = new oxField($oPaymentInfo->PaymentTransactionID);
         if ($oPaymentInfo->AlreadyPaid) {
             $sPaymentDate = $this->_fcFetchPaymentDate($oPaymentInfo->PaymentDate);
@@ -546,6 +559,9 @@ class fco2aorderimport extends fco2abase {
      * @return string
      */
     protected function _fcGetOxidPaymentId($oPaymentInfo) {
+        if ((string)$oPaymentInfo->PaymentMethod == 'eBay Managed Payment') {
+            return $this->_fcEbayPaymentType; #0102749
+        }
         $sOxidPaymentId = $this->_fcMatchPayment($oPaymentInfo);
 
         if (!$sOxidPaymentId) {
