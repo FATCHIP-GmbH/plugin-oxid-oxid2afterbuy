@@ -472,11 +472,14 @@ class fco2aartexport extends fco2abase {
     }
 
     /**
-     * @param string $sArticleId
+     * @param object $oArticle
      * @return array
      */
-    protected function _getAttributesForArticle($sArticleId)
+    protected function _getAttributesForArticle($oArticle)
     {
+        $sArticleId = $oArticle->getId();
+        $sParentId = $oArticle->getParentId();
+
         $oDb = oxDb::getDb(oxDb::FETCH_MODE_ASSOC);
 
         $sAttrViewName = getViewName('oxattribute');
@@ -484,12 +487,15 @@ class fco2aartexport extends fco2abase {
 
         $sSelect = "select {$sAttrViewName}.`oxid`, {$sAttrViewName}.`oxtitle`, o2a.`oxvalue` from {$sViewName} as o2a ";
         $sSelect .= "left join {$sAttrViewName} on {$sAttrViewName}.oxid = o2a.oxattrid ";
-        $sSelect .= "where o2a.oxobjectid = :oxobjectid and o2a.oxvalue != '' ";
+        $sSelect .= "where o2a.oxobjectid = '%s' and o2a.oxvalue != '' ";
         $sSelect .= "order by o2a.oxpos, {$sAttrViewName}.oxpos";
 
-        $aAttributes = $oDb->getAll($sSelect, [
-            ':oxobjectid' => $sArticleId
-        ]);
+        $aAttributes = $oDb->getAll(sprintf($sSelect, $sArticleId));
+
+        if ($sParentId) {
+            $aParentAttributes = $oDb->getAll(sprintf($sSelect, $sParentId));
+            $aAttributes = $this->_mergeAttributes($aAttributes, $aParentAttributes);
+        }
         return $aAttributes;
     }
 
@@ -502,7 +508,7 @@ class fco2aartexport extends fco2abase {
      */
     protected function _fcAddAttributeValues($oAfterbuyArticle, $oArticle)
     {
-        $aAttributes = $this->_getAttributesForArticle($oArticle->getId());
+        $aAttributes = $this->_getAttributesForArticle($oArticle);
         $this->oDefaultLogger->fcWriteLog(
             "DEBUG: Loaded Attributes of article object with ID:".
             $oArticle->getId(),
@@ -517,10 +523,10 @@ class fco2aartexport extends fco2abase {
         $iPos = 1;
         foreach ($aAttributes as $aAttribute) {
             $oAttribute = oxNew('oxattribute');
-            $oAttribute->load($aAttribute['OXID']); // Load full attribute
+            $oAttribute->load($aAttribute['oxid']); // Load full attribute
 
             $sAttributeName = $oAttribute->oxattribute__oxtitle->value;
-            $sAttributeValue = $aAttribute['OXVALUE'];
+            $sAttributeValue = $aAttribute['oxvalue'];
             $sAfterbuyFeatureId = $oAttribute->oxattribute__fcafterbuyfeatureid->value;
 
             $oAfterbuyAddAttribute = $this->_fcGetAddAttribute();
