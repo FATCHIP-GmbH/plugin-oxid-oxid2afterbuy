@@ -67,6 +67,11 @@ class fcafterbuyapi {
 
     protected $oApiLogger;
 
+    /**
+     * @var string
+     */
+    protected $_sFeatureDelimiter = ", ";
+
 
     /**
      * fcafterbuyapi constructor.
@@ -746,6 +751,25 @@ class fcafterbuyapi {
         return $sValue;
     }
 
+    protected function _getGroupedFeatures($aAttributeList)
+    {
+        $aReturnList = [];
+        foreach ($aAttributeList as $oAddAttribute) {
+            if (empty($oAddAttribute->FeatureId)) {
+                continue;
+            }
+
+            $oAddAttribute->AttributValue = $this->_getFeatureValue($oAddAttribute);
+
+            if (!isset($aReturnList[$oAddAttribute->FeatureId])) {
+                $aReturnList[$oAddAttribute->FeatureId] = $oAddAttribute;
+            } else { // is set
+                $aReturnList[$oAddAttribute->FeatureId]->AttributValue .= $this->_sFeatureDelimiter.$oAddAttribute->AttributValue;
+            }
+        }
+        return $aReturnList;
+    }
+
     /**
      * Adds product attributes
      * #0102749
@@ -763,16 +787,17 @@ class fcafterbuyapi {
             $aAttributeList[] = $this->_getPseudoAttribute(2981, $oArt->EAN); // 2981 = "EAN"
         }
 
+        $aAttributeList = $this->_getGroupedFeatures($aAttributeList);
+
         $sFeatureXml = "";
         foreach ($aAttributeList as $oAddAttribute) {
             if (empty($oAddAttribute->FeatureId)) {
                 continue;
             }
-            $sValue = $this->_getFeatureValue($oAddAttribute);
-            if (!empty($sValue)) {
+            if (!empty($oAddAttribute->AttributValue)) {
                 $sFeatureXml .= "<Feature>";
                 $sFeatureXml .= "<ID>".$oAddAttribute->FeatureId."</ID>";
-                $sFeatureXml .= "<Value><![CDATA[".$sValue."]]></Value>";
+                $sFeatureXml .= "<Value><![CDATA[".$oAddAttribute->AttributValue."]]></Value>";
                 $sFeatureXml .= "</Feature>";
             }
         }
