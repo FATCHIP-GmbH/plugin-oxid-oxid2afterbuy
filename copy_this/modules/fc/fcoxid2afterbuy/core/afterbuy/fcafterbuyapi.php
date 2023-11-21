@@ -556,7 +556,7 @@ class fcafterbuyapi {
     protected function _fcAddPictures($oArt, $sXmlData)
     {
         $sXmlData .= '<ProductPictures>';
-        for($iIndex=1;$iIndex<=12;$iIndex++) {
+        for($iIndex = 1; $iIndex <= 12; $iIndex++) {
             $sPictureAttribute = 'ProductPicture_Url_'.$iIndex;
             $sPictureUrl = $oArt->$sPictureAttribute;
             if (!$sPictureUrl) continue;
@@ -566,6 +566,13 @@ class fcafterbuyapi {
                     <Nr>'.$iIndex.'</Nr>
                     <Url>' . $sPictureUrl . '</Url>
                     <AltText><![CDATA[' . $oArt->Name . ']]></AltText>        
+                    <Childs>
+                        <ProductPicture>
+                            <Typ>1</Typ>
+                            <Url>' . $sPictureUrl . '</Url>
+                            <AltText><![CDATA[' . $oArt->Name . ']]></AltText>
+                        </ProductPicture>
+                    </Childs>
                 </ProductPicture>
             ';
         }
