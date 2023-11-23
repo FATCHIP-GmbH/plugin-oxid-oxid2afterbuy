@@ -895,6 +895,7 @@ class fco2aartexport extends fco2abase {
         $oAfterbuyArticle->Name = $this->_fcGetArticleName($oArticle);
         $oAfterbuyArticle->Description = $oArticle->getLongDesc();
         $oAfterbuyArticle->SellingPrice = $this->_fcGetSellingPrice($oArticle); #0102749
+        $oAfterbuyArticle->Actor = !empty($oArticle->oxarticles__actor->value) ? $oArticle->oxarticles__actor->value : ''; #0102749
         $oAfterbuyArticle->TaxRate = $oArticle->getArticleVat();
         $oAfterbuyArticle->ItemSize = $oArticle->getSize();
         $oAfterbuyArticle->CanonicalUrl = $oArticle->getMainLink();

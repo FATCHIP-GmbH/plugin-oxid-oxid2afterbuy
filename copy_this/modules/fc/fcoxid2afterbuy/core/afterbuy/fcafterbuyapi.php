@@ -793,6 +793,9 @@ class fcafterbuyapi {
         if (!empty($oArt->EAN)) {
             $aAttributeList[] = $this->_getPseudoAttribute(2981, $oArt->EAN); // 2981 = "EAN"
         }
+        if (!empty($oArt->Actor)) {
+            $aAttributeList[] = $this->_getPseudoAttribute(2996, $oArt->Actor); // 2996 = "Schauspieler"
+        }
 
         $aAttributeList = $this->_getGroupedFeatures($aAttributeList);
 
