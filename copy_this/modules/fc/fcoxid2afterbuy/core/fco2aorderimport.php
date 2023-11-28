@@ -32,7 +32,19 @@ class fco2aorderimport extends fco2abase {
     /**
      * @var string
      */
+    protected $_fcEbayDeliveryType = 'oxidstandard';
+
+    /**
+     * @var string
+     */
     protected $_fcEbayIpIdentifier = 'ebay';
+
+    /**
+     * Dont import orders, only output what orders WOULD be imported or which not
+     *
+     * @var bool
+     */
+    protected $_fcBlDryMode = false;
 
     /**
      * Central entry point for triggering order import
@@ -54,6 +66,71 @@ class fco2aorderimport extends fco2abase {
         $this->_fcParseApiResponse($oXmlResponse, $oAfterbuyApi);
     }
 
+    protected function isOrderAlreadyExistingOldConnector($oXmlOrder)
+    {
+        $sTransactionId = (string)$oXmlOrder->SoldItems->SoldItem->eBayTransactionID;
+        $sQuery = " SELECT 
+                        a.oxid 
+                    FROM 
+                        oxorder AS a
+                    INNER JOIN
+                        mo_viaebay__order_details AS b ON a.MO_VIAEBAY__VIA_ID = b.MO_VIAEBAY__VIA_ID
+                    WHERE
+                        b.MO_VIAEBAY__ORDER_DETAILS LIKE '%TransactionId\";s:".strlen($sTransactionId).":\"".$sTransactionId."\"%'";
+
+        $oDb = oxDb::getDb();
+        $sOxid = $oDb->getOne($sQuery);
+        if (!empty($sOxid)) {
+            return true;
+        }
+        return false;
+    }
+
+    protected function isOrderAlreadyExisting($oXmlOrder)
+    {
+        $sOrderId = (string)$oXmlOrder->OrderID;
+        $sQuery = " SELECT 
+                        oxid 
+                    FROM 
+                        oxorder_afterbuy
+                    WHERE
+                        FCAFTERBUY_UID = '".$sOrderId."'";
+
+        $oDb = oxDb::getDb();
+        $sOxid = $oDb->getOne($sQuery);
+        if (!empty($sOxid)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if order can be imported
+     *
+     * @param SimpleXMLElement $oXmlOrder
+     * @return bool
+     */
+    protected function canImportOrder($oXmlOrder)
+    {
+        if ($this->isOrderAlreadyExistingOldConnector($oXmlOrder) === true) {
+            return false;
+        }
+        if ($this->isOrderAlreadyExisting($oXmlOrder) === true) {
+            return false;
+        }
+        return true;
+    }
+
+    protected function getOrderStringIdent($oXmlOrder)
+    {
+        $sIdent  = (string)$oXmlOrder->OrderID." ";
+        $sIdent .= (string)$oXmlOrder->OrderDate." ";
+        $sIdent .= (string)$oXmlOrder->BuyerInfo->BillingAddress->FirstName." ";
+        $sIdent .= (string)$oXmlOrder->BuyerInfo->BillingAddress->LastName." ";
+        $sIdent .= (string)$oXmlOrder->SoldItems->SoldItem->eBayTransactionID;
+        return $sIdent;
+    }
+
     /**
      * Checks and parses API result
      *
@@ -68,12 +145,30 @@ class fco2aorderimport extends fco2abase {
         }
 
         foreach ($oXmlResponse->Result->Orders->Order as $oXmlOrder) {
-            $this->oApiLogger->fcWriteLog("DEBUG: oXmlOrder:\n".print_r($oXmlOrder,true), 4);
-            $oAfterbuyOrder = $this->_fcGetAfterbuyOrder();
-            $oAfterbuyOrder->createOrderByApiResponse($oXmlOrder);
-            $this->oApiLogger->fcWriteLog("DEBUG: Created result in oAfterbuyOrder:\n".print_r($oAfterbuyOrder,true), 4);
-            $this->_fcCreateOxidOrder($oAfterbuyOrder);
-            $this->_fcNotifyExported($oAfterbuyOrder, $oAfterbuyApi);
+            if ($this->_fcBlDryMode === true) { // DRY MODE = only output which orders WOULD be imported and which not
+                echo $this->getOrderStringIdent($oXmlOrder)." - Check Order".PHP_EOL;
+                if ($this->isOrderAlreadyExistingOldConnector($oXmlOrder) === true) {
+                    echo $this->getOrderStringIdent($oXmlOrder)." - Order existing through old connector - DONT IMPORT".PHP_EOL;
+                } elseif ($this->isOrderAlreadyExisting($oXmlOrder) === true) {
+                    echo $this->getOrderStringIdent($oXmlOrder)." - Order existing through new connector - DONT IMPORT".PHP_EOL;
+                } else {
+                    echo $this->getOrderStringIdent($oXmlOrder)." - Order not existing - import".PHP_EOL;
+                }
+            } else {
+                if ($this->canImportOrder($oXmlOrder) === false) {
+                    $this->oApiLogger->fcWriteLog("DEBUG: SKIP ORDER:\n".print_r($oXmlOrder,true), 4);
+                    continue; // skip order if already exists or other factors are disqualifying it
+                }
+
+                $this->oApiLogger->fcWriteLog("DEBUG: oXmlOrder:\n".print_r($oXmlOrder,true), 4);
+                $oAfterbuyOrder = $this->_fcGetAfterbuyOrder();
+                $oAfterbuyOrder->createOrderByApiResponse($oXmlOrder);
+                $this->oApiLogger->fcWriteLog("DEBUG: Created result in oAfterbuyOrder:\n".print_r($oAfterbuyOrder,true), 4);
+                $this->_fcCreateOxidOrder($oAfterbuyOrder);
+                $this->_fcNotifyExported($oAfterbuyOrder, $oAfterbuyApi);
+
+                echo $this->getOrderStringIdent($oXmlOrder)." - imported order".PHP_EOL; // for debug purposes - can be removed if needed
+            }
         }
     }
 
@@ -182,6 +277,9 @@ class fco2aorderimport extends fco2abase {
         // delivery date
         $sDeliveryDate = $this->_fcGetOxidDeliveryDate($oAfterbuyOrder);
         $oOrder->oxorder__oxsenddate = new oxField($sDeliveryDate, oxField::T_RAW);
+
+        $oOrder->oxorder__oxdeltype = new oxField($this->_fcEbayDeliveryType, oxField::T_RAW); #0102749
+        $oOrder->oxorder__tc_ebay_buyername = new oxField($oAfterbuyOrder->BuyerInfoBilling->UserIDPlattform, oxField::T_RAW); #0102749
 
         // shipping costs - always delivered as brut price from Afterbuy, ignore vat settings in oxid
         $dShippingCostsTotal = $this->_fcFetchAmount($oAfterbuyOrder->ShippingInfo->ShippingTotalCost);

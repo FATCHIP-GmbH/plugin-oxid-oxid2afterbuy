@@ -276,6 +276,7 @@ class fcafterbuyapi {
         $sXmlData .= "<OrderDirection>1</OrderDirection>";
         $sXmlData .= "<RequestAllItems>1</RequestAllItems>";
         $sXmlData .= $this->getNewOrderFilter();
+        #$sXmlData .= $this->getDateFilter();
         $sXmlData .= $this->getXmlFoot();
         $sOutput = $this->requestAPI($sXmlData);
 
@@ -398,7 +399,25 @@ class fcafterbuyapi {
         return $sOutput;
     }
 
-
+    /**
+     * Returns filter for only requesting orders after 2023-11-25
+     * #0102749
+     *
+     * @return string
+     */
+    protected function getDateFilter()
+    {
+        $sXmlData  = "<DataFilter>";
+        $sXmlData .= "    <Filter>";
+        $sXmlData .= "        <FilterName>DateFilter</FilterName>";
+        $sXmlData .= "        <FilterValues>";
+        $sXmlData .= "            <DateFrom>25.11.2023 00:00:01</DateFrom>";
+        $sXmlData .= "            <FilterValue>AuctionEndDate</FilterValue>"; // AuctionEndDate seems to be the OrderDate
+        $sXmlData .= "        </FilterValues>";
+        $sXmlData .= "    </Filter>";
+        $sXmlData .= "</DataFilter>";
+        return $sXmlData;
+    }
 
     /**
      * Returns filter for requesting only new orders
