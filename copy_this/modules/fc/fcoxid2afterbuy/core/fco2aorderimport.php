@@ -280,6 +280,11 @@ class fco2aorderimport extends fco2abase {
 
         $oOrder->oxorder__oxdeltype = new oxField($this->_fcEbayDeliveryType, oxField::T_RAW); #0102749
         $oOrder->oxorder__tc_ebay_buyername = new oxField($oAfterbuyOrder->BuyerInfoBilling->UserIDPlattform, oxField::T_RAW); #0102749
+        // Add missing values
+        $oOrder->oxorder__oxbillustidstatus = new oxField(1, oxField::T_RAW); #0102749
+        $oOrder->oxorder__oxgiftcardvat = new oxField(19, oxField::T_RAW); #0102749
+        $oOrder->oxorder__oxcurrency = new oxField('EUR', oxField::T_RAW); #0102749
+        $oOrder->oxorder__oxcurrate = new oxField(1, oxField::T_RAW); #0102749
 
         // shipping costs - always delivered as brut price from Afterbuy, ignore vat settings in oxid
         $dShippingCostsTotal = $this->_fcFetchAmount($oAfterbuyOrder->ShippingInfo->ShippingTotalCost);
@@ -430,9 +435,13 @@ class fco2aorderimport extends fco2abase {
             $sProductId = $this->_fcGetProductIdByAfterbuyId($oProductDetails->ProductID);
             if (!$sProductId) {
                 $sProductId = $this->_fcGetProductIdByArtNum($sArtNum);
+            } else {
+                // $oProductDetails->EAN is not the artnum used in the shop, get it through product id
+                $sArtNum = $this->_fcGetArtNumByOxid($sProductId); #0102749
             }
             $sVariant = $this->_fcGetVariationByOxid($sProductId);
             $sShortDesc = $this->_fcGetShortDescByOxid($sProductId);
+            $sArticleSize = $this->_fcGetArticleSizeByOxid($sProductId);
 
             $iAmount = $oSoldItem->ItemQuantity;
             $dSinglePrice = $this->_fcFetchAmount($oSoldItem->ItemPrice);
@@ -464,6 +473,7 @@ class fco2aorderimport extends fco2abase {
             $oOrderArticle->oxorderarticles__oxselvariant = new oxField($sVariant);
             $oOrderArticle->oxorderarticles__oxshortdesc = new oxField($sShortDesc);
             $oOrderArticle->oxorderarticles__oxsubclass = new oxField("oxarticle");
+            $oOrderArticle->oxorderarticles__article_size_type = new oxField($sArticleSize); #0102749
             $oOrderArticle->setIsNewOrderItem(true); // enables stock management
             $oOrderArticle->save();
         }
@@ -497,6 +507,34 @@ class fco2aorderimport extends fco2abase {
         $sVariant = $oDb->getOne($sQuery);
 
         return (string)$sVariant;
+    }
+
+    /**
+     * Returns varselect of product by oxid
+     *
+     * @param $sOxid
+     * @return string
+     */
+    protected function _fcGetArticleSizeByOxid($sOxid) {
+        $oDb = oxDb::getDb();
+        $sQuery = "SELECT article_size_type FROM oxarticles WHERE OXID = ".$oDb->quote($sOxid)." LIMIT 1";
+        $sVariant = $oDb->getOne($sQuery);
+
+        return (string)$sVariant;
+    }
+
+    /**
+     * Returns artnum of product by oxid
+     *
+     * @param $sOxid
+     * @return string
+     */
+    protected function _fcGetArtNumByOxid($sOxid) {
+        $oDb = oxDb::getDb();
+        $sQuery = "SELECT OXARTNUM FROM oxarticles WHERE OXID = ".$oDb->quote($sOxid)." LIMIT 1";
+        $sArtnum = $oDb->getOne($sQuery);
+
+        return (string)$sArtnum;
     }
 
     /**
