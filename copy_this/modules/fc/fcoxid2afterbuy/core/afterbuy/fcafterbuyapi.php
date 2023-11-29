@@ -162,7 +162,7 @@ class fcafterbuyapi {
      * @param $oOrderState
      * @return string
      */
-    public function updateSoldItemsOrderState($oOrderState) {
+    public function updateSoldItemsOrderState($oOrderState, $blDryMode = false) {
         $sXmlData = $this->getXmlHead('UpdateSoldItems', 0);
         $sXmlData .= "<Orders>";
         $sXmlData .= "<Order>";
@@ -189,6 +189,10 @@ class fcafterbuyapi {
         $sXmlData .= "</Orders>";
         $sXmlData .= $this->getXmlFoot();
 
+        if ($blDryMode === true) {
+            // don't send API call in dry mode
+            return $sXmlData;
+        }
         $sOutput = $this->requestAPI($sXmlData);
         return $sOutput;
     }

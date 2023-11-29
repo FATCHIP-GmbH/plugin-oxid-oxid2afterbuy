@@ -2,6 +2,20 @@
 class fco2astatusexport extends fco2abase {
 
     /**
+     * Dont import orders, only output what orders WOULD be imported or which not
+     *
+     * @var bool
+     */
+    protected $_fcBlDryMode = false;
+
+    /**
+     * Can be used to execute script only for one specific orderId
+     *
+     * @var string
+     */
+    protected $_sTestOrderId = false;
+
+    /**
      * Central execution method
      *
      * @param void
@@ -29,21 +43,38 @@ class fco2astatusexport extends fco2abase {
             $oAfterbuyOrderStatus =
                 $this->_fcAssignOrderDataToOrderStatus($oOrder, $oAfterbuyOrderStatus);
             $sResponse =
-                $oAfterbuyApi->updateSoldItemsOrderState($oAfterbuyOrderStatus);
+                $oAfterbuyApi->updateSoldItemsOrderState($oAfterbuyOrderStatus, $this->_fcBlDryMode);
             $blApiCallSuccess =
                 $this->_fcCheckApiCallSuccess($sResponse);
 
             // mark orderstatus as fulfilled in OXID database if there is a remarkable event
+            // seems like paid or send dates can contain "-" when they are empty...
             $blFulfilled = (
-                $oOrder->oxorder__oxpaid->value != '0000-00-00 00:00:00' &&
-                $oOrder->oxorder__oxsenddate->value != '0000-00-00 00:00:00' &&
+                !empty($oOrder->oxorder__oxpaid->value) && $oOrder->oxorder__oxpaid->value != '-' && $oOrder->oxorder__oxpaid->value != '0000-00-00 00:00:00' &&
+                !empty($oOrder->oxorder__oxsenddate->value) && $oOrder->oxorder__oxsenddate->value != '-' && $oOrder->oxorder__oxsenddate->value != '0000-00-00 00:00:00' &&
                 $blApiCallSuccess
             );
             if ($blFulfilled) {
                 $oOrder->oxorder__fcafterbuy_fulfilled = new oxField(1);
             }
-            $oOrder->save();
-            $this->_fcSetLastCheckedDate($sOrderOxid);
+
+            if ($this->_fcBlDryMode === true || $this->_sTestOrderId !== false) {
+                echo "Paid '".$oOrder->oxorder__oxpaid->value."'".PHP_EOL;
+                echo "Sent '".$oOrder->oxorder__oxsenddate->value."'".PHP_EOL;
+                if (!empty($oOrder->oxorder__oxpaid->value) && $oOrder->oxorder__oxpaid->value != '-'  && $oOrder->oxorder__oxpaid->value != '0000-00-00 00:00:00' &&
+                    !empty($oOrder->oxorder__oxsenddate->value) && $oOrder->oxorder__oxsenddate->value != '-'  && $oOrder->oxorder__oxsenddate->value != '0000-00-00 00:00:00') {
+                    echo "Paid and sent".PHP_EOL;
+                } else {
+                    echo "NOT fulfilled".PHP_EOL;
+                }
+                print_r($oAfterbuyOrderStatus);
+                echo $sResponse.PHP_EOL;
+            }
+
+            if ($this->_fcBlDryMode === false && strpos($sResponse, "<Error>") === false) { // dont change data in dry-mode or with error-response
+                $oOrder->save();
+                $this->_fcSetLastCheckedDate($sOrderOxid);
+            }
         }
     }
 
@@ -127,6 +158,9 @@ class fco2astatusexport extends fco2abase {
             AND
                 ooab.FCAFTERBUY_FULFILLED != '1'
         ";
+        if (!empty($this->_sTestOrderId)) {
+            $sQuery .= " AND oo.oxid = '".$this->_sTestOrderId."' ";
+        }
         $aRows = $oDb->getAll($sQuery);
 
         foreach ($aRows as $aRow) {
