@@ -442,6 +442,7 @@ class fco2aorderimport extends fco2abase {
             $sVariant = $this->_fcGetVariationByOxid($sProductId);
             $sShortDesc = $this->_fcGetShortDescByOxid($sProductId);
             $sArticleSize = $this->_fcGetArticleSizeByOxid($sProductId);
+            $sIsNc17 = $this->_fcGetIsNc17ByOxid($sProductId);
 
             $iAmount = $oSoldItem->ItemQuantity;
             $dSinglePrice = $this->_fcFetchAmount($oSoldItem->ItemPrice);
@@ -474,6 +475,7 @@ class fco2aorderimport extends fco2abase {
             $oOrderArticle->oxorderarticles__oxshortdesc = new oxField($sShortDesc);
             $oOrderArticle->oxorderarticles__oxsubclass = new oxField("oxarticle");
             $oOrderArticle->oxorderarticles__article_size_type = new oxField($sArticleSize); #0102749
+            $oOrderArticle->oxorderarticles__is_nc17 = new oxField($sIsNc17); #0102749
             $oOrderArticle->setIsNewOrderItem(true); // enables stock management
             $oOrderArticle->save();
         }
@@ -510,7 +512,7 @@ class fco2aorderimport extends fco2abase {
     }
 
     /**
-     * Returns varselect of product by oxid
+     * Returns article_size_type of product by oxid
      *
      * @param $sOxid
      * @return string
@@ -518,6 +520,20 @@ class fco2aorderimport extends fco2abase {
     protected function _fcGetArticleSizeByOxid($sOxid) {
         $oDb = oxDb::getDb();
         $sQuery = "SELECT article_size_type FROM oxarticles WHERE OXID = ".$oDb->quote($sOxid)." LIMIT 1";
+        $sVariant = $oDb->getOne($sQuery);
+
+        return (string)$sVariant;
+    }
+
+    /**
+     * Returns is_nc17 of product by oxid
+     *
+     * @param $sOxid
+     * @return string
+     */
+    protected function _fcGetIsNc17ByOxid($sOxid) {
+        $oDb = oxDb::getDb();
+        $sQuery = "SELECT is_nc17 FROM oxarticles WHERE OXID = ".$oDb->quote($sOxid)." LIMIT 1";
         $sVariant = $oDb->getOne($sQuery);
 
         return (string)$sVariant;
