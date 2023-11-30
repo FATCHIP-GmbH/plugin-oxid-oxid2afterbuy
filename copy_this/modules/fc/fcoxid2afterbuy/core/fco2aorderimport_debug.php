@@ -1,5 +1,5 @@
 <?php
-class fco2aorderimport extends fco2abase {
+class fco2aorderimport_debug extends fco2abase {
 
     /**
      * Assignments to use payment matching
@@ -44,7 +44,14 @@ class fco2aorderimport extends fco2abase {
      *
      * @var bool
      */
-    protected $_fcBlDryMode = false;
+    protected $_fcBlDryMode = true;
+
+    /**
+     * Dont import orders, only output what orders WOULD be imported or which not
+     *
+     * @var bool
+     */
+    protected $_fcTestOrder = false;
 
     /**
      * Central entry point for triggering order import
@@ -61,10 +68,15 @@ class fco2aorderimport extends fco2abase {
 
         $oAfterbuyApi = $this->_fcGetAfterbuyApi();
         $this->_fcSetFilter($oAfterbuyApi);
-        $sResponse = $oAfterbuyApi->getSoldItemsFromAfterbuy();
-        #error_log($sResponse, 3, __DIR__."/".date('YmdHis').".xml");
+        $sResponse = $oAfterbuyApi->getSoldItemsFromAfterbuyDebug($this->_fcTestOrder);
+        error_log($sResponse, 3, __DIR__."/".date('YmdHis').".xml");
         $oXmlResponse = simplexml_load_string($sResponse);
         $this->_fcParseApiResponse($oXmlResponse, $oAfterbuyApi);
+    }
+
+    public function setTestOrderId($sTestOrderId)
+    {
+        $this->_fcTestOrder = $sTestOrderId;
     }
 
     protected function isOrderAlreadyExistingOldConnector($oXmlOrder)
@@ -153,6 +165,12 @@ class fco2aorderimport extends fco2abase {
                     echo $this->getOrderStringIdent($oXmlOrder)." - Order existing through new connector - DONT IMPORT".PHP_EOL;
                 } else {
                     echo $this->getOrderStringIdent($oXmlOrder)." - Order not existing - import".PHP_EOL;
+                }
+
+                if ($this->_fcTestOrder !== false) {
+                    $oAfterbuyOrder = $this->_fcGetAfterbuyOrder();
+                    $oAfterbuyOrder->createOrderByApiResponse($oXmlOrder);
+                    print_r($oAfterbuyOrder);
                 }
             } else {
                 if ($this->canImportOrder($oXmlOrder) === false) {
