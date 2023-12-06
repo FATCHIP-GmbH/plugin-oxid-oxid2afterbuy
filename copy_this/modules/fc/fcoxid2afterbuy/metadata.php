@@ -135,6 +135,12 @@ $aModule = array(
             'type' => 'bool',
             'value' => false
         ),
+        array(
+            'group' => 'fcafterbuy_export',
+            'name' => 'sFcAfterbuyExportStockTime',
+            'type' => 'str',
+            'value' => ""
+        ),
 
         array(
             'group' => 'fcafterbuy_import',
