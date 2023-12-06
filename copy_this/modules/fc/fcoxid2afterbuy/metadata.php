@@ -63,6 +63,7 @@ $aModule = array(
         'fco2abaseimport'                   => 'fc/fcoxid2afterbuy/core/fco2abaseimport.php',
         'fco2aorder'                        => 'fc/fcoxid2afterbuy/core/fco2aorder.php',
         'fco2aartexport'                    => 'fc/fcoxid2afterbuy/core/fco2aartexport.php',
+        'fco2aartexportstock'               => 'fc/fcoxid2afterbuy/core/fco2aartexportstock.php',
         'fco2aorderimport'                  => 'fc/fcoxid2afterbuy/core/fco2aorderimport.php',
         'fco2astatusexport'                 => 'fc/fcoxid2afterbuy/core/fco2astatusexport.php',
         'fco2astatusimport'                 => 'fc/fcoxid2afterbuy/core/fco2astatusimport.php',
