@@ -49,6 +49,7 @@ $aLang = array(
     'SHOP_MODULE_sFcAfterbuyImportArticleNumber_1'          => 'External article number',
     'SHOP_MODULE_sFcAfterbuyImportArticleNumber_2'          => 'Afterbuy Product Id',
     'SHOP_MODULE_sFcAfterbuyImportArticleNumber_3'          => 'Article number',
+    'SHOP_MODULE_sFcAfterbuyExportStockTime'                => 'last stock date ( yyyy-mm-dd hh:mm:ss )',
     'SHOP_MODULE_blFcAfterbuyIgnoreArticlesWithoutNr'       => 'Discard articles without article number',
     'SHOP_MODULE_blFcStockLimitAuction'                     => 'Limit stock of ype auction',
     'SHOP_MODULE_blFcSendOrdersOnTheFly'                    => 'Directly transfer order on order finish',

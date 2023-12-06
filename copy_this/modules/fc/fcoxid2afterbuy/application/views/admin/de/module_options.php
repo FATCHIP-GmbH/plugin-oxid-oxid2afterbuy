@@ -48,6 +48,7 @@ $aLang = array(
     'SHOP_MODULE_sFcAfterbuyImportArticleNumber_1'          => 'externe Artikelnummer',
     'SHOP_MODULE_sFcAfterbuyImportArticleNumber_2'          => 'Afterbuy Product Id',
     'SHOP_MODULE_sFcAfterbuyImportArticleNumber_3'          => 'Artikelnummer',
+    'SHOP_MODULE_sFcAfterbuyExportStockTime'                => 'letztes Lager Datum ( yyyy-mm-dd hh:mm:ss )',
     'SHOP_MODULE_blFcAfterbuyIgnoreArticlesWithoutNr'       => 'Artikel ohne Artikelnummer verwerfen',
     'HELP_SHOP_MODULE_blFcAfterbuyExportAll'                => 'Standardmäßig werden nur Artikel zu Afterbuy übertragen, welche unter dem Reiter "Afterbuy" einen Haken gesetzt haben.',
     'SHOP_MODULE_blFcStockLimitAuction'                     => 'Bestandart vom Typ Auktion verwenden',
