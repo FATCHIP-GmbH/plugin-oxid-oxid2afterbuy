@@ -109,10 +109,10 @@ class fco2abase extends oxBase {
                 'afterbuyShopInterfaceBaseUrl' => ($oConfig->getConfigParam('blFcAfterbuyExportUTF8Orders') === true) ? $this->sAfterbuyShopInterfaceUTF8Url : $this->sAfterbuyShopInterfaceUrl,
                 'afterbuyAbiUrl' =>
                     $this->sAfterbuyInterfaceUrl,
-                'afterbuyPartnerId' =>
-                    $oConfig->getConfigParam('sFcAfterbuyPartnerId'),
-                'afterbuyPartnerPassword' =>
-                    $oConfig->getConfigParam('sFcAfterbuyPartnerPassword'),
+                'afterbuyAccountToken' =>
+                    $oConfig->getConfigParam('sFcAfterbuyAccountToken'),
+                'afterbuyPartnerToken' =>
+                    $oConfig->getConfigParam('sFcAfterbuyPartnerToken'),
                 'afterbuyUsername' =>
                     $oConfig->getConfigParam('sFcAfterbuyUsername'),
                 'afterbuyUserPassword' =>

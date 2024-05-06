@@ -108,13 +108,13 @@ $aModule = array(
         ),
         array(
             'group' => 'fcafterbuy_connect',
-            'name' => 'sFcAfterbuyPartnerId',
+            'name' => 'sFcAfterbuyAccountToken',
             'type' => 'str',
             'value' => ""
         ),
         array(
             'group' => 'fcafterbuy_connect',
-            'name' => 'sFcAfterbuyPartnerPassword',
+            'name' => 'sFcAfterbuyPartnerToken',
             'type' => 'password',
             'value' => ""
         ),
