@@ -115,6 +115,7 @@ $aModule = array(
         array(
             'group' => 'fcafterbuy_connect',
             'name' => 'sFcAfterbuyPartnerToken',
+            'type' => 'str',
             'value' => ""
         ),
         array(
