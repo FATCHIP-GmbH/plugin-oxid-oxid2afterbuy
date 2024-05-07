@@ -42,16 +42,16 @@ class fcafterbuyapi {
     protected $afterbuyAbiUrl = "";
 
     /**
-     * Partner ID of Afterbuy
+     * Account Token of Afterbuy
      * @var string
      */
-    protected $afterbuyPartnerId = "";
+    protected $afterbuyAccountToken = "";
 
     /**
-     * Partner Password for Afterbuy
+     * Partner Token for Afterbuy
      * @var string
      */
-    protected $afterbuyPartnerPassword = "";
+    protected $afterbuyPartnerToken = "";
 
     /**
      * Username for Afterbuy
@@ -75,8 +75,8 @@ class fcafterbuyapi {
      * $aConfig = array(
      *      'afterbuyShopInterfaceBaseUrl' => <AfterbuyShopInterfaceBaseUrl>,
      *      'afterbuyAbiUrl' => <AfterbuyAbiUrl>,
-     *      'afterbuyPartnerId' => <AfterbuyPartnerId>,
-     *      'afterbuyPartnerPassword' => <AfterbuyPartnerPassword>,
+     *      'afterbuyAccountToken' => <AfterbuyAccountToken>,
+     *      'afterbuyPartnerToken' => <AfterbuyPartnerToken>,
      *      'afterbuyUsername' => <AfterbuyUsername>,
      *      'afterbuyUserPassword' => <AfterbuyUserPassword>,
      *      'logLevel' => <LogLevel>,
@@ -743,8 +743,8 @@ class fcafterbuyapi {
         $sXml = '<?xml version="1.0" encoding="utf-8"?>
                 <Request>
                     <AfterbuyGlobal>
-                        <PartnerID>' . $this->afterbuyPartnerId . '</PartnerID>
-                        <PartnerPassword><![CDATA[' . $this->afterbuyPartnerPassword . ']]></PartnerPassword>
+                         <PartnerToken><![CDATA[' . $this->afterbuyPartnerToken . ']]></PartnerToken>
+                        <AccountToken>' . $this->afterbuyAccountToken . '</AccountToken>
                         <UserID><![CDATA[' . $this->afterbuyUsername . ']]></UserID>
                         <UserPassword><![CDATA[' . $this->afterbuyUserPassword . ']]></UserPassword>
                         <CallName>' . $sCallName . '</CallName>

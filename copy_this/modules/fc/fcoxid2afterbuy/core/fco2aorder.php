@@ -137,9 +137,8 @@ class fco2aorder extends fco2abase {
     protected function _fcGetAfterbuyCredentialParameter()
     {
         $aConfig = $this->_fcGetAfterbuyConfigArray();
-
-        $sCredentialParameters = "&Partnerid=" . $this->_fcEncodeParameters($aConfig['afterbuyPartnerId'], false);
-        $sCredentialParameters .= "&PartnerPass=" . $this->_fcEncodeParameters($aConfig['afterbuyPartnerPassword'], false);
+        $sCredentialParameters = "&UserToken=" . $this->_fcEncodeParameters($aConfig['afterbuyAccountToken'], false);
+        $sCredentialParameters .= "&PartnerToken=" . $this->_fcEncodeParameters($aConfig['afterbuyPartnerToken'], false);
         $sCredentialParameters .= "&UserID=" . $this->_fcEncodeParameters($aConfig['afterbuyUsername'], false);
 
         return $sCredentialParameters;
