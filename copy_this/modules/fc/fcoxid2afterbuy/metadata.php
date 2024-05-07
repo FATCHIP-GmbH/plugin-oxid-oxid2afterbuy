@@ -28,7 +28,7 @@ $aModule = array(
         'en'=>'Interface to Afterbuy API',
     ),
     'thumbnail'    => 'oxid2afterbuy.png',
-    'version'      => '%%VERSION%%',
+    'version'      => '1.7.4',
     'author'       => 'Fatchip GmbH',
     'url'          => 'http://www.fatchip.de',
     'email'        => 'support@fatchip.de',
